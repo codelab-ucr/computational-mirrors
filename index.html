@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computational Mirrors: Broadband Wide Field of View Imaging</title>
+<meta name="description" content="Computational Mirrors — broadband, wide field-of-view imaging across 400–1700nm using simple reflective optics, a sparse focal stack, and SeidelConv.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --ink:#16181d;
+    --paper:#fbfaf7;
+    --paper-raised:#ffffff;
+    --muted:#5b5f6a;
+    --hairline:#e3e1da;
+    --v1:#5b3df0;   /* ~420nm violet  */
+    --v2:#2f7df6;   /* ~480nm blue    */
+    --v3:#1fb87a;   /* ~560nm green   */
+    --v4:#e8c33c;   /* ~600nm yellow  */
+    --v5:#ef8a3c;   /* ~650nm orange  */
+    --v6:#d5483f;   /* ~700nm red     */
+    --v7:#7a2620;   /* NIR, going dark*/
+    --v8:#2a1414;   /* SWIR, near-black*/
+    --spectrum: linear-gradient(90deg,var(--v1),var(--v2),var(--v3),var(--v4),var(--v5),var(--v6) 58%,var(--v7) 80%,var(--v8) 100%);
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px;}
+  .wrap-wide{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  a{color:var(--v2);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:84px 0 36px;text-align:center;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:clamp(44px,7vw,72px);
+    line-height:0.98;
+    background:linear-gradient(120deg,#3a3d46 0%,#171a20 35%,#5b5f6a 60%,#22252b 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .hero .subtitle{
+    font-family:'Fraunces',serif;
+    font-weight:400;
+    font-style:italic;
+    font-size:clamp(17px,2.4vw,22px);
+    color:var(--muted);
+    margin-top:14px;
+    max-width:620px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .authors{margin-top:34px;font-size:16.5px;}
+  .authors .sup{font-size:11px;position:relative;top:-6px;color:var(--muted);}
+  .affils{margin-top:6px;color:var(--muted);font-size:14.5px;}
+
+  .linkrow{
+    display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+    margin-top:28px;
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:9px 18px;
+    border-radius:999px;
+    background:var(--ink);
+    color:#fff;
+    font-size:14px;font-weight:500;
+    border:1px solid var(--ink);
+  }
+  .pill:hover{background:#2c2f37;text-decoration:none;}
+  .pill.outline{background:transparent;color:var(--ink);}
+  .pill.outline:hover{background:var(--ink);color:#fff;}
+
+  /* ---------- spectrum ruler (signature element) ---------- */
+  .ruler{margin:46px auto 0;max-width:760px;}
+  .ruler-bar{
+    height:10px;border-radius:6px;
+    background:var(--spectrum);
+    box-shadow:0 1px 0 rgba(0,0,0,0.08) inset;
+  }
+  .ruler-labels{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;color:var(--muted);
+    margin-top:7px;
+  }
+  .ruler-bands{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:0.08em;
+    margin-top:2px;color:#8b8f99;
+  }
+
+  /* ---------- figures ---------- */
+  figure{margin:40px auto;text-align:center;}
+  figure img{
+    max-width:100%;
+    border-radius:var(--radius);
+    border:1px solid var(--hairline);
+    box-shadow:0 1px 3px rgba(0,0,0,0.05), 0 10px 30px -16px rgba(20,20,30,0.25);
+  }
+  figcaption{
+    text-align:left;
+    font-size:14.5px;
+    color:var(--muted);
+    margin-top:14px;
+    max-width:820px;
+    margin-left:auto;margin-right:auto;
+  }
+  figcaption b{color:var(--ink);}
+
+  .teaser-fig{max-width:880px;margin:50px auto 10px;}
+
+  /* ---------- sections ---------- */
+  section{padding:54px 0;}
+  section.bordered{border-top:1px solid var(--hairline);}
+  .section-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--v2);margin-bottom:10px;
+  }
+  section h2{font-size:30px;margin-bottom:6px;}
+  .lede{font-size:18px;color:#34373f;max-width:760px;}
+
+  p{margin:0 0 16px;font-size:16.5px;color:#262931;}
+  .prose p:last-child{margin-bottom:0;}
+
+  h3.sub{
+    font-family:'Fraunces',serif;font-weight:600;
+    font-size:21px;margin-top:38px;margin-bottom:10px;
+    color:#1c1e23;
+  }
+  h3.sub .tag{
+    display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:var(--spectrum);margin-right:9px;
+    transform:translateY(0.5px);
+  }
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:30px 0;}
+  @media (max-width:720px){.grid2{grid-template-columns:1fr;}}
+  .card{
+    background:var(--paper-raised);border:1px solid var(--hairline);
+    border-radius:var(--radius);padding:22px 24px;
+  }
+  .card h4{font-family:'Fraunces',serif;font-size:17px;margin:0 0 8px;}
+  .card p{font-size:15px;margin-bottom:0;color:#3b3e46;}
+
+  /* spec table */
+  table.specs{width:100%;border-collapse:collapse;margin:30px 0;font-size:15px;}
+  table.specs th, table.specs td{
+    text-align:left;padding:10px 14px;border-bottom:1px solid var(--hairline);
+  }
+  table.specs th{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);
+    border-bottom:2px solid var(--ink);
+  }
+  table.specs td.check{color:#1fb87a;font-weight:700;text-align:center;}
+  table.specs td.cross{color:#c44b3f;font-weight:700;text-align:center;}
+  table.specs tr.highlight td{background:#f4f1ff;font-weight:600;}
+
+  .pullquote{
+    font-family:'Fraunces',serif;font-style:italic;font-weight:500;
+    font-size:21px;line-height:1.5;color:#1c1e23;
+    border-left:3px solid var(--v2);padding-left:22px;margin:34px 0;
+  }
+
+  /* ---------- bibtex ---------- */
+  .bibtex{
+    background:#15171c;color:#e7e6e1;
+    border-radius:var(--radius);
+    padding:24px 26px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;line-height:1.7;
+    overflow-x:auto;
+    white-space:pre;
+  }
+  .bibtex .kw{color:#7fb7ff;}
+  .bibtex .str{color:#b7e29a;}
+
+  /* ---------- footer ---------- */
+  footer{
+    padding:40px 0 60px;text-align:center;
+    color:var(--muted);font-size:13.5px;
+  }
+  footer .ruler-bar{max-width:240px;margin:0 auto 20px;height:6px;}
+
+  .meta-note{font-size:13.5px;color:#8b8f99;margin-top:8px;}
+
+  ::selection{background:#d9d2ff;}
+</style>
+</head>
+<body>
+
+<!-- ============= HERO ============= -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Accepted to ECCV 2026</div>
+    <h1>Broadband Wide Field of View Imaging with Computational Mirrors</h1>
+
+    <div class="authors">
+      Vishwanath&nbsp;Saragadam<span class="sup">1</span> &nbsp;&middot;&nbsp;
+      Niki&nbsp;Nezakati<span class="sup">1</span> &nbsp;&middot;&nbsp;
+      Amit&nbsp;Roy&#8209;Chowdhury<span class="sup">1</span> &nbsp;&middot;&nbsp;
+      Vivek&nbsp;Boominathan<span class="sup">2</span>
+    </div>
+    <div class="affils"><span class="sup">1</span>University of California, Riverside &nbsp;&nbsp; <span class="sup">2</span>Rice University</div>
+
+    <div class="linkrow">
+      <a class="pill" href="https://arxiv.org/abs/2605.00029" target="_blank">↗ Paper (arXiv)</a>
+      <a class="pill outline" href="#bibtex">BibTeX</a>
+      <a class="pill outline" href="#code">Code &amp; Data (coming soon)</a>
+    </div>
+
+    <div class="ruler">
+      <div class="ruler-bar"></div>
+      <div class="ruler-labels"><span>400nm</span><span>700nm</span><span>1000nm</span><span>1700nm</span></div>
+      <div class="ruler-bands"><span>VISIBLE</span><span>NEAR-INFRARED</span><span>SHORTWAVE INFRARED</span></div>
+    </div>
+
+    <figure class="teaser-fig">
+      <img src="./static/images/teaser.jpg" alt="Computational mirrors teaser figure">
+      <figcaption><b>Reflective optics are achromatic — but only mirrors equipped with computation can use it.</b> Glass objectives that span 400–1700nm need stacks of heavy, dispersion-correcting elements and still blur (a). A single concave mirror is lightweight and free of chromatic blur, but its image is sharp only near the optical axis (b). By capturing a sparse focal stack and deconvolving it, we recover sharp images across the full field of view in RGB, NIR, and SWIR simultaneously (c), enabling long-range multispectral capture (d) and material analysis such as currency authentication (e).</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- ============= ABSTRACT ============= -->
+<section class="bordered">
+  <div class="wrap">
+    <div class="section-eyebrow">Abstract</div>
+    <div class="prose">
+      <p>Sensors capable of imaging from the visible through the shortwave-infrared (VIS-SWIR, 400–1700nm) are increasingly common, but the optics that focus this light are not. Refractive lenses suffer from chromatic aberration — different wavelengths focus at different depths — and correcting for it across such a wide band typically requires bulky, multi-element, expensive assemblies. Mirrors are inherently achromatic and would seem to be the obvious fix, but simple one- or two-element mirror objectives suffer from severe off-axis aberrations and <b>Petzval field curvature</b>: the sharply-focused surface is curved, not flat, so a flat sensor can never capture the whole field of view in focus at once. This has historically confined mirror-based imaging to narrow fields of view or very slow apertures.</p>
+      <p>We introduce <b>Computational Mirrors</b>, a practical pipeline that pairs hardware-controlled focal-stack acquisition with a physics-motivated forward model and multi-image reconstruction. A minimal focal stack of 2–4 images, captured by sweeping the sensor along the optical axis, ensures every point in the field of view is sampled near its own focus. To undo the remaining spatially-varying blur, we propose <b>SeidelConv</b>, a learned point-spread-function model inspired by classical Seidel aberration theory, which represents each local PSF as a weighted mixture of affine-warped, blurred copies of the image. Folding SeidelConv into a plug-and-play reconstruction framework recovers a single sharp, all-in-focus image from the sparse stack. We validate the approach with <i>f</i>/1 50mm and <i>f</i>/2 100mm prototypes built from off-the-shelf concave mirrors and a Sony IMX990 VIS-SWIR sensor, demonstrating sharp imaging across RGB, NIR, and SWIR with a single focus setting and no wavelength-dependent calibration — the first demonstration of high-aperture (<i>f</i>/1), ultra-broadband imaging with simple reflective optics.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============= METHOD ============= -->
+<section class="bordered">
+  <div class="wrap">
+    <div class="section-eyebrow">Method</div>
+    <h2>Two advantages, one liability</h2>
+    <p class="lede">Mirrors are light and achromatic — but only computation can give them a usable field of view.</p>
+
+    <figure>
+      <img src="./static/images/challenges.jpg" alt="Weight comparison, broadband capability, and off-axis aberrations of mirrors">
+      <figcaption><b>(a)</b> A 50–100mm reflective objective weighs a fraction of an equivalent refractive lens, and the gap widens with focal length. <b>(b)</b> Paired with a VIS-SWIR sensor, the same mirror focuses blue through SWIR with no refocusing. <b>(c)</b> But off-axis regions are severely blurred — only a small patch near the optical axis is ever sharp on a flat sensor.</figcaption>
+    </figure>
+
+    <table class="specs">
+      <tr><th>Approach</th><th>Light &amp; compact</th><th>Broadband</th><th>Full FoV</th></tr>
+      <tr><td>Refractive optics</td><td class="cross">✕</td><td class="cross">✕</td><td class="check">✓</td></tr>
+      <tr><td>Reflective optics</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✕</td></tr>
+      <tr class="highlight"><td>Computational Mirrors + SeidelConv</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+    </table>
+
+    <h3 class="sub"><span class="tag"></span>Hardware: a sparse focal stack across the Petzval curve</h3>
+    <p>Our objective mimics the form factor of a conventional lens: a primary concave mirror focuses light through a central aperture, redirected by a secondary flat fold mirror to keep the assembly compact. The sensor sits on a motorized linear translation stage (Thorlabs ELL17k) aligned with the optical axis. On-axis and off-axis regions of the scene reach focus at different depths because of Petzval curvature, so translating the sensor samples the curved focal surface directly. Prior work required dense stacks of 20–30 images to cover this volume; we found that <b>three images</b> are enough to bring every point in the field of view near its own focus at least once, after which reconstruction quality plateaus.</p>
+
+    <figure>
+      <img src="./static/images/hardware.jpg" alt="Computational mirrors hardware setup">
+      <figcaption><b>(a)</b> Off-axis points reach the Petzval-curved focal surface at different sensor positions, so a sparse axial sweep <span style="white-space:nowrap">{I<sub>z₀</sub>, I<sub>z₀+Δz</sub>, I<sub>z₀+2Δz</sub>}</span> samples the whole field. <b>(b)</b> Our prototype: a Sony IMX990 VIS-SWIR sensor on a translation stage, behind a folded concave-mirror assembly built from off-the-shelf optics (Edmund Optics, &lt;$100 per mirror).</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="tag"></span>SeidelConv: a physics-inspired PSF model</h3>
+    <p>Off-axis blur in a few-mirror system comes from coma, astigmatism, and spherical aberration — the classical Seidel aberrations. These distortions stretch and rotate the point-spread function as it moves away from the optical axis, in ways that patch-wise convolution or low-order eigen-decompositions struggle to capture, especially once real mechanical misalignment breaks the textbook radial symmetry. SeidelConv instead represents the <i>k</i>-th focal-stack image as a mixture of <i>Q</i> warped, blurred, and re-weighted copies of the latent sharp image:</p>
+    <p style="text-align:center;">\[ I^{(k)}(\mathbf{p}) = \sum_{q=1}^{Q} w_q^{(k)}(\mathbf{p})\; I_0\!\big(\phi_q^{(k)}(\mathbf{p})\big) * h_q^{(k)}(\mathbf{p}), \qquad \phi_q^{(k)}(\mathbf{p}) = R_q^{(k)}\mathbf{p} + \mathbf{t}_q^{(k)} \]</p>
+    <p>where each term has its own learned affine warp \(\phi_q^{(k)}\), blur kernel \(h_q^{(k)}\), and per-pixel weight \(w_q^{(k)}\). The affine warp is the key addition over prior spatially-varying convolution models (e.g. CoordGate): it gives the model a geometric degree of freedom to mimic the stretching and rotation that coma and astigmatism actually produce off-axis. Parameters are calibrated once, monitor-to-sensor, by displaying random dot patterns and fitting with stochastic gradient descent — after which the same model works for any subject distance.</p>
+
+    <figure>
+      <img src="./static/images/seidelconv.jpg" alt="SeidelConv architecture and deconvolution pipeline">
+      <figcaption><b>(a)</b> SeidelConv's forward model: the sharp input is warped, blurred, and per-pixel weighted along Q branches, then summed to predict one focal-stack frame. <b>(b)</b> Three real captures, each sharp in a different region (center / middle / periphery), are jointly deconvolved by folding SeidelConv into a plug-and-play prior — recovering a single image that is sharp everywhere (28.6dB / 0.86 SSIM in this example).</figcaption>
+    </figure>
+
+    <p>Recovering the latent sharp image \(I_0\) from the calibrated stack is then a small multi-image inverse problem,</p>
+    <p style="text-align:center;">\[ \min_{I_0(\mathbf{p})}\; \sum_{k=1}^{N} \big\| \mathcal{A}^{(k)}(I_0(\mathbf{p})) - I^{(k)}(\mathbf{p}) \big\|_2^2 \;+\; \lambda\, \mathcal{R}(I_0(\mathbf{p})), \]</p>
+    <p>solved with a plug-and-play deep denoiser prior \(\mathcal{R}(\cdot)\) (DPIR), which we found to outperform total-variation, deep-image-prior, and implicit-neural-representation alternatives in our ablations.</p>
+
+    <div class="pullquote">A unique advantage of mirror-based optics: because the PSF is nearly wavelength-invariant, SeidelConv calibrated once on visible light deconvolves NIR and SWIR captures with no fine-tuning at all.</div>
+  </div>
+</section>
+
+<!-- ============= RESULTS ============= -->
+<section class="bordered">
+  <div class="wrap-wide">
+    <div class="section-eyebrow" style="text-align:center;">Results</div>
+    <h2 style="text-align:center;">One mirror, three bands, no refocusing</h2>
+    <p class="lede" style="text-align:center;margin:0 auto;">Real captures with f/1 50mm and f/2 100mm prototypes, deconvolved from a 3-image focal stack.</p>
+
+    <figure>
+      <img src="./static/images/multispectral_results.jpg" alt="Multispectral imaging results across RGB, NIR, and SWIR">
+      <figcaption style="max-width:1000px;"><b>High-resolution VIS-SWIR multispectral imaging.</b> Same focus setting, five spectral filters, single SeidelConv model. SWIR reveals what RGB and NIR cannot: the robot hidden inside an opaque bag (row 1), a security band on a genuine $20 note invisible in visible light (row 5), bruising inside an apple (row 8) — while NIR distinguishes a real plant from an artificial one by foliage brightness (row 6) that looks identical in RGB and SWIR.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./static/images/mirror_vs_glass.jpg" alt="Comparison of mirror objective against SLR lens and planoconvex lens">
+      <figcaption style="max-width:1000px;"><b>Why mirrors win at broadband.</b> A 100mm SLR zoom lens is sharp in the visible (where it's optimized) but blurs across the full VIS-SWIR range; a simple planoconvex lens is poor at any range, since its PSF (right column) varies drastically with wavelength. Our mirror + SeidelConv stays sharp across the entire 400–1700nm span — at 60g and 50mm long, versus 405g and three times the length for the SLR lens.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./static/images/focal_stack_count.jpg" alt="Effect of number of focal stack images on reconstruction quality">
+      <figcaption style="max-width:1000px;"><b>Three images is the sweet spot.</b> A single capture leaves most of the field of view out of focus; quality improves sharply through two and three images, then plateaus. We use N=3 for all 50mm-objective results in the paper — fewer images means faster, simpler acquisition.</figcaption>
+    </figure>
+
+    <p class="meta-note" style="text-align:center;">Full quantitative comparisons against CoordGate, patch-wise PSF models, and ablations over priors and SeidelConv hyperparameters are in the paper and supplementary material.</p>
+  </div>
+</section>
+
+<!-- ============= HARDWARE SPECS ============= -->
+<section class="bordered" id="code">
+  <div class="wrap">
+    <div class="section-eyebrow">Build it yourself</div>
+    <h2>Prototype details</h2>
+    <p class="lede">Both objectives were built from off-the-shelf parts for well under $1,000 in optics.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h4>50mm, f/1 objective</h4>
+        <p>Edmund Optics #43-470 concave mirror &middot; 200µm axial step &middot; optimal for scenes at close-to-moderate range &middot; strongest field curvature of the two prototypes.</p>
+      </div>
+      <div class="card">
+        <h4>100mm, f/2 objective</h4>
+        <p>Edmund Optics #43-841 concave mirror &middot; 100µm axial step &middot; used for long-range capture (objects 6–10ft away) &middot; lower field curvature, fewer focal-stack images needed.</p>
+      </div>
+      <div class="card">
+        <h4>Sensor &amp; stage</h4>
+        <p>Sony IMX990 VIS-SWIR sensor (400–1700nm), binned to 512×640 &middot; Thorlabs ELL17k translation stage (180mm/s, 20µm steps).</p>
+      </div>
+      <div class="card">
+        <h4>SeidelConv</h4>
+        <p>Q = 31 affine + blur terms, 11×11 kernels, PyTorch, calibrated from L = 10 monitor-displayed dot patterns per axial setting.</p>
+      </div>
+    </div>
+
+    <p>We will release a 100-image calibration dataset (captured from the DIV2K validation set on our optical setup, with both 50mm and 100mm objectives) along with the SeidelConv implementation, to support further research on mirror-based computational imaging.</p>
+  </div>
+</section>
+
+<!-- ============= BIBTEX ============= -->
+<section class="bordered" id="bibtex">
+  <div class="wrap">
+    <div class="section-eyebrow">Cite this work</div>
+    <h2 style="margin-bottom:22px;">BibTeX</h2>
+    <div class="bibtex">@article<span>{</span>saragadam2026computational,
+  <span class="kw">title</span>=<span class="str">{Broadband Wide Field of View Imaging with Computational Mirrors}</span>,
+  <span class="kw">author</span>=<span class="str">{Saragadam, Vishwanath and Nezakati, Niki and Roy-Chowdhury, Amit and Boominathan, Vivek}</span>,
+  <span class="kw">journal</span>=<span class="str">{arXiv preprint arXiv:2605.00029}</span>,
+  <span class="kw">year</span>=<span class="str">{2026}</span>
+<span>}</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="ruler-bar"></div>
+  <div class="wrap">
+    University of California, Riverside &nbsp;&middot;&nbsp; Rice University<br>
+    Page adapted from the Nerfies project-page template.
+  </div>
+</footer>
+
+</body>
+</html>
